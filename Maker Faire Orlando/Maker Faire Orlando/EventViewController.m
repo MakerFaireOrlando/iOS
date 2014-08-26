@@ -61,11 +61,19 @@
     NSSortDescriptor *sortByStartTime = [[NSSortDescriptor alloc] initWithKey:@"startTime"
                                                                     ascending:YES];
     [request setSortDescriptors:@[sortByStartTime]];
+    NSPredicate *filterOldItems = [NSPredicate predicateWithFormat:@"startTime > %@", [NSDate date]];
+    [request setPredicate:filterOldItems];
+    NSError* error;
+    NSArray *returnedEvents = [_context executeFetchRequest:request error:&error];
     
-    NSArray *returnedEvents = [_context executeFetchRequest:request error:nil];
     
     _events = returnedEvents;
-    
+    NSLog(@"current time = %@", [NSDate date]);
+    for (Event* e in _events) {
+        NSLog(@"e.startTime = %@", e.startTime);
+        NSLog(@"e.endTime = %@", e.endTime);
+    }
+    NSLog(@"number of events = %lu", (unsigned long)[_events count]);
     dispatch_async(dispatch_get_main_queue(), ^{
         [_tableView reloadData];
     });
@@ -96,7 +104,7 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    int index = [[_tableView indexPathForSelectedRow] row];
+    long index = [[_tableView indexPathForSelectedRow] row];
     EventDetailViewController *detailViewController = (EventDetailViewController*)[segue destinationViewController];
     Event *event = [_events objectAtIndex:index];
     [detailViewController setEvent:event];
